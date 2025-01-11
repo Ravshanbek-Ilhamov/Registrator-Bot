@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\MealRequest;
 use App\Models\Category;
 use App\Models\Meal;
+use App\Models\Order;
+use App\Models\OrderItem;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 
@@ -13,10 +15,10 @@ class MealController extends Controller
     public function index()
     {
         $models = Meal::all();
-
+        $curriers = \App\Models\User::where('role', 'currier')->get();
         $categories = Category::all();
 
-        return view('meal.index', ['meals' => $models, 'categories' => $categories]);
+        return view('meal.index', ['meals' => $models, 'categories' => $categories, 'curriers' => $curriers]);
     }
 
     public function store(MealRequest $request)
@@ -60,5 +62,28 @@ class MealController extends Controller
         $meal->delete();
 
         return redirect()->back()->with('success', 'Meal deleted successfully');
+    }
+
+    public function giveToCurrier(Request $request)
+    {   
+
+        $data = $request->all();
+        $meal = Meal::find($data['meal_id']);
+        $currier = \App\Models\User::find($data['currier_id']);
+
+        Order::create([
+            'currier_id' => $currier->id,
+            'status' => 'pending',
+            'price' => $meal->price,
+            'location' => $data['location'],
+            'date' => $data['datetime']          
+        ]);
+
+        OrderItem::create([
+            'order_id' => Order::latest()->first()->id,
+            'meal_id' => $meal->id
+        ]);
+
+        return redirect()->back()->with('success', 'Meal given to currier successfully');
     }
 }

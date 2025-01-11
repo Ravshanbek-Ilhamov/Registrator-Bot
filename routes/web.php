@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\MealController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -14,4 +15,5 @@ Route::post('/logout',[AuthController::class,'logout'])->name('logout');
 Route::middleware('check')->group(function () {
     Route::resource('category',App\Http\Controllers\CategoryController::class);
     Route::resource('meal',App\Http\Controllers\MealController::class);
+    Route::post('/giveToCurrier', [MealController::class, 'giveToCurrier'])->name('meal.giveToCurrier');
 });

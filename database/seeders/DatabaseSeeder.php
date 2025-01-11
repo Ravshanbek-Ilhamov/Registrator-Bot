@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'Test User',
             'email' => 'test@example.com',
             'chat_id' => '5648765646',
+            'role' => 'admin',
         ]);
     }
 }

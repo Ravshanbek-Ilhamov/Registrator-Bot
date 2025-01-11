@@ -14,27 +14,84 @@
         <div class="mb-3">
             <a href="#" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createMealModal">Create
                 Meal</a>
+            <!-- Button trigger modal -->
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                Give To Currier
+            </button>
+
+            <!-- Modal -->
+            <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <form action="{{ route('meal.giveToCurrier') }}" method="POST">
+                            @csrf
+                            <div class="modal-header">
+                                <h1 class="modal-title fs-5" id="exampleModalLabel">Thisisit</h1>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row">
+                                    <div class="col-12 mt-3">
+                                        <label class="form-label" for="mealss">Select Meal</label>
+                                        <select class="form-control" name="meal_id" id="mealss">
+                                            @foreach ($meals as $item)
+                                            <option class="form-control" value="{{ $item->id }}">{{ $item->name }}
+                                            </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-12 mt-3">
+                                        <label class="form-label" for="currier_id">Currier</label>
+                                        <select class="form-control" name="currier_id" id="currier_id">
+                                            @foreach ($curriers as $item)
+                                            <option value="{{ $item->id }}">{{ $item->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-12 mt-3">
+                                        <label class="form-label">Date Time</label>
+                                        <input type="datetime-local" name="datetime" class="form-control">
+                                    </div>
+                                    <div class="col-12 mt-3">
+                                        <label class="form-label">Location (Longitude, Latitude)</label>
+                                        <input type="text" name="location" class="form-control">
+                                    </div>
+                                    <div class="col-12 mt-3">
+                                        <button type="submit" class="btn btn-primary">Send</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <button type="button" class="btn btn-primary">Save changes</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="row">
             @foreach ($meals as $meal)
-                <div class="col-3">
-                    <div class="card">
-                        <img src="{{ asset('storage/' . $meal->image) }}" alt="Meal Image" class="card-img-top">
-                        <div class="card-body">
-                            <h5 class="card-title">{{ $meal->name }}</h5>
-                            <p class="card-text">{{ $meal->category->name }}</p>
-                            <p class="card-text">{{ $meal->price }} so'm</p>
-                            <a href="#" class="btn btn-warning" data-bs-toggle="modal"
-                                data-bs-target="#updateMealModal{{ $meal->id }}">Edit</a>
-                            <form action="{{ route('meal.destroy', $meal->id) }}" method="POST" class="d-inline-block">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-danger">Delete</button>
-                            </form>
-                        </div>
+            <div class="col-3">
+                <div class="card">
+                    <img src="{{ asset('storage/' . $meal->image) }}" alt="Meal Image" class="card-img-top">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ $meal->name }}</h5>
+                        <p class="card-text">{{ $meal->category->name }}</p>
+                        <p class="card-text">{{ $meal->price }} so'm</p>
+                        <a href="#" class="btn btn-warning" data-bs-toggle="modal"
+                            data-bs-target="#updateMealModal{{ $meal->id }}">Edit</a>
+                        <form action="{{ route('meal.destroy', $meal->id) }}" method="POST" class="d-inline-block">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-danger">Delete</button>
+                        </form>
                     </div>
                 </div>
+            </div>
             @endforeach
         </div>
     </div>
@@ -60,7 +117,7 @@
                             <select name="category_id" class="form-select" required>
                                 <option value="">Select Category</option>
                                 @foreach ($categories as $category)
-                                    <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                <option value="{{ $category->id }}">{{ $category->name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -84,54 +141,52 @@
 
     <!-- Update Meal Modal -->
     @foreach ($meals as $meal)
-        <div class="modal fade" id="updateMealModal{{ $meal->id }}" tabindex="-1"
-            aria-labelledby="updateMealModalLabel{{ $meal->id }}" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="updateMealModalLabel{{ $meal->id }}">Edit Meal</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <form action="{{ route('meal.update', $meal->id) }}" method="POST" enctype="multipart/form-data">
-                        @csrf
-                        @method('PUT')
-                        <div class="modal-body">
-                            <div class="mb-3">
-                                <label for="name" class="form-label">Name</label>
-                                <input type="text" name="name" class="form-control"
-                                    value="{{ $meal->name }}" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="category_id" class="form-label">Category</label>
-                                <select name="category_id" class="form-select" required>
-                                    <option value="{{ $meal->category_id }}">{{ $meal->category->name }}</option>
-                                    @foreach ($categories as $category)
-                                        <option value="{{ $category->id }}">{{ $category->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label for="price" class="form-label">Price</label>
-                                <input type="number" name="price" class="form-control"
-                                    value="{{ $meal->price }}" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="image" class="form-label">Image</label>
-                                <input type="file" name="image" class="form-control">
-                                @if ($meal->image)
-                                    <img src="{{ Storage::url($meal->image) }}" alt="Current Image"
-                                        class="img-thumbnail mt-2" width="150">
-                                @endif
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            <button type="submit" class="btn btn-primary">Update Meal</button>
-                        </div>
-                    </form>
+    <div class="modal fade" id="updateMealModal{{ $meal->id }}" tabindex="-1"
+        aria-labelledby="updateMealModalLabel{{ $meal->id }}" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="updateMealModalLabel{{ $meal->id }}">Edit Meal</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
+                <form action="{{ route('meal.update', $meal->id) }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    @method('PUT')
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Name</label>
+                            <input type="text" name="name" class="form-control" value="{{ $meal->name }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="category_id" class="form-label">Category</label>
+                            <select name="category_id" class="form-select" required>
+                                <option value="{{ $meal->category_id }}">{{ $meal->category->name }}</option>
+                                @foreach ($categories as $category)
+                                <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="price" class="form-label">Price</label>
+                            <input type="number" name="price" class="form-control" value="{{ $meal->price }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="image" class="form-label">Image</label>
+                            <input type="file" name="image" class="form-control">
+                            @if ($meal->image)
+                            <img src="{{ Storage::url($meal->image) }}" alt="Current Image" class="img-thumbnail mt-2"
+                                width="150">
+                            @endif
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Update Meal</button>
+                    </div>
+                </form>
             </div>
         </div>
+    </div>
     @endforeach
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

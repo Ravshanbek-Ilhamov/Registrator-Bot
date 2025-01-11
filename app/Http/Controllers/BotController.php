@@ -35,11 +35,76 @@ class BotController extends Controller
     public function bot(Request $request)
     {
         try {
+            
+
             $data = $request->all();
             $chat_id = $data['message']['chat']['id'];
             $text = $data['message']['text'] ?? null;
             $photo = $data['message']['photo'] ?? null;
-            Log::info($chat_id);
+
+            $user = User::where('chat_id', $chat_id)->first();
+            Log::info($user);
+
+            if ($text == '/currier' && $user->role == 'currier') {
+                if($user->orders()->count() == 0) {
+                    $this->store($chat_id, "Sizda buyurtma mavjud emas");
+                    return;
+                }
+                foreach ($user->orders()->where('status', 'pending')->get() as $order) {
+                    $locationParts = explode(', ', $order->location);
+                    Log::info($locationParts);
+                    $latitude = $locationParts[0] ?? null;
+                    $longitude = $locationParts[1] ?? null;
+
+                    $locationLink = null;
+                    if ($latitude && $longitude) {
+                        $locationLink = "https://www.google.com/maps?q=$latitude,$longitude";
+                    }
+
+                    $message = "Price: $order->price\nDate: $order->date";
+
+                    if ($locationLink) {
+                        $message .= "\nLocation: [View on Google Maps]($locationLink)";
+                    }
+                    $this->store(
+                        $chat_id,
+                        $message,
+                        [
+                            'keyboard' => [
+                                [
+                                    ['text' => 'Order ni tasdiqlash✅'],
+                                    ['text' => 'Order ni bekor qilish⛔️'],
+                                ]
+                            ],
+                            'resize_keyboard' => true,
+                            'one_time_keyboard' => true,
+                            'parse_mode' => 'MarkdownV2',
+                        ]
+                    );
+                }
+                return;
+            }
+            if ($text == 'Order ni bekor qilish⛔️') {
+                $order = $user->orders()->where('status', '!=', 'done')->first();
+                if (!$order) {
+                    $this->store($chat_id, "Sizda buyurtma mavjud emas");
+                    return;
+                }
+                $orderItem = $order->orderItems()->where('order_id', $order->id)->first();
+                $orderItem->delete();
+                $order->delete();
+                $this->store($chat_id, "Order bekor qilindi");
+                return;
+            } elseif ($text == 'Order ni tasdiqlash✅') {
+                $order = $user->orders()->where('status','!=','done')->latest()->first();
+                if (!$order) {
+                    $this->store($chat_id, "Sizda buyurtma mavjud emas");
+                    return;
+                }
+                $order->update(['status' => 'done']);
+                $this->store($chat_id, "Order tasdiqlandi");
+                return;
+            }
 
             if ($text === '/start') {
                 $this->store($chat_id, "Assalomu alaykum! Iltimos, tanlang:", [
@@ -202,9 +267,7 @@ class BotController extends Controller
                     $profileMessage = "<b>Sizning profilingiz:</b>\n\n" .
                         "<b>Ism:</b> {$user->name}\n" .
                         "<b>Email:</b> {$user->email}";
-
                     $this->store($chat_id, $profileMessage);
-
                     if ($user->image) {
                         $filePath = storage_path("app/public/{$user->image}");
                         if (file_exists($filePath)) {
