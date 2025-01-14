@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\OrderStatusUpdated;
 use App\Mail\SendCode;
+use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -91,17 +93,24 @@ class BotController extends Controller
                     return;
                 }
                 $orderItem = $order->orderItems()->where('order_id', $order->id)->first();
+
+                broadcast(new OrderStatusUpdated($order));
+                Log::info("Order is deleted: " . $order);
                 $orderItem->delete();
                 $order->delete();
+
                 $this->store($chat_id, "Order bekor qilindi");
                 return;
             } elseif ($text == 'Order ni tasdiqlash✅') {
-                $order = $user->orders()->where('status','!=','done')->latest()->first();
+                $order = $user->orders()->where('status', '!=', 'done')->latest()->first();
                 if (!$order) {
                     $this->store($chat_id, "Sizda buyurtma mavjud emas");
                     return;
                 }
                 $order->update(['status' => 'done']);
+                Log::info("Order is updated: " . $order);
+                broadcast(new OrderStatusUpdated($order));
+
                 $this->store($chat_id, "Order tasdiqlandi");
                 return;
             }

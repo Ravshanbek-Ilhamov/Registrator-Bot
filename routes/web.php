@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\MealController;
+use App\Http\Controllers\OrderController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -16,4 +17,5 @@ Route::middleware('check')->group(function () {
     Route::resource('category',App\Http\Controllers\CategoryController::class);
     Route::resource('meal',App\Http\Controllers\MealController::class);
     Route::post('/giveToCurrier', [MealController::class, 'giveToCurrier'])->name('meal.giveToCurrier');
+    Route::get('/orders', [OrderController::class, 'index'])->name('orders');
 });
